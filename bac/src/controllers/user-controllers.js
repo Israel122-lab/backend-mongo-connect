@@ -25,9 +25,54 @@ const createUser = async (req, res) => {
                 email: newUser.email
             }
         });
+
+      
     } catch (error) {
         res.status(500).json({message: 'Error creating user', error: error.message});
     }
 }
 
-module.exports = createUser
+const loginUser = async (req, res) => {
+    try {
+        const {email, password} = req.body;
+
+        // Find the user by email
+        const user = await User.findOne({email});
+        if(!user) {
+            return res.status(400).json({message: 'Invalid credentials'});
+        }
+
+        // compare passwords
+        const isMatch = await user.comparePassword(password);
+        if(!isMatch) {
+            return res.status(400).json({message: 'Invalid credentials'});
+        }
+
+        res.status(200).json({
+            message: 'Login successful',
+            user: { id: user._id, name: user.name, email: user.email }
+        });
+    } catch (error) {
+        res.status(500).json({message: 'Error logging in', error: error.message});
+    }
+}
+
+const logoutUser = async (req, res) => {
+   try {
+    const{email} = req.body;
+
+    // Find the user by email
+    const user = await User.findOne({email});
+    if(!user) {
+        return res.status(400).json({message: 'Invalid credentials'});
+    }
+    res.status(200).json({
+        message: 'Logout successful',
+        user: { id: user._id, name: user.name, email: user.email }
+    });
+   } catch (error) {
+    res.status(500).json({message: 'Error logging out', error: error.message});
+   }
+}
+
+module.exports = { createUser, loginUser, logoutUser }
